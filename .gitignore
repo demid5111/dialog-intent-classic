@@ -1,0 +1,7 @@
+.gradle/
+.idea/
+build/
+libs/
+out/
+sequentials/
+gradle.properties
