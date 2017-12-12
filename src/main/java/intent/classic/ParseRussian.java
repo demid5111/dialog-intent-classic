@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-public class ParseRussian {
+class ParseRussian {
 
     static boolean isSuperTypes = true;
     static LinkedHashMap<Character, Integer> alphabet = new LinkedHashMap<Character, Integer>();
@@ -33,11 +33,7 @@ public class ParseRussian {
                 alphabet.put(rusChar, i);
                 i++;
             }
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -47,41 +43,40 @@ public class ParseRussian {
     }
 
     private static void splitToSuperTypes() {
-
         ArrayList<Character> st1 = new ArrayList<Character>();
-        st1.add('�');
-        st1.add('�');
-        st1.add('�');
-        st1.add('�');
-        st1.add('�');
+        st1.add('а');
+        st1.add('б');
+        st1.add('в');
+        st1.add('г');
+        st1.add('д');
 
         ArrayList<Character> st2 = new ArrayList<Character>();
-        st2.add('�');
-        st2.add('�');
-        st2.add('�');
-        st2.add('�');
-        st2.add('�');
+        st2.add('е');
+        st2.add('ж');
+        st2.add('з');
+        st2.add('и');
+        st2.add('к');
 
         ArrayList<Character> st3 = new ArrayList<Character>();
-        st3.add('�');
-        st3.add('�');
-        st3.add('�');
-        st3.add('�');
-        st3.add('�');
+        st3.add('л');
+        st3.add('м');
+        st3.add('н');
+        st3.add('о');
+        st3.add('п');
 
         ArrayList<Character> st4 = new ArrayList<Character>();
-        st4.add('�');
-        st4.add('�');
-        st4.add('�');
-        st4.add('�');
-        st4.add('�');
+        st4.add('р');
+        st4.add('с');
+        st4.add('т');
+        st4.add('у');
+        st4.add('ф');
 
         ArrayList<Character> st5 = new ArrayList<Character>();
-        st5.add('�');
-        st5.add('�');
-        st5.add('�');
-        st5.add('�');
-        st5.add('�');
+        st5.add('х');
+        st5.add('ц');
+        st5.add('ч');
+        st5.add('ш');
+        st5.add('щ');
 
         superTypes.put(1, st1);
         superTypes.put(2, st2);

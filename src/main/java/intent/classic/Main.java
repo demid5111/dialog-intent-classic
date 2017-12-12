@@ -1,8 +1,6 @@
 package intent.classic;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URL;
 
 import com.tinkerpop.blueprints.Direction;
@@ -12,6 +10,7 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import com.tinkerpop.blueprints.util.io.gml.GMLReader;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,26 +28,35 @@ import ca.pfv.spmf.algorithms.sequenceprediction.ipredict.predictor.Markov.Marko
 import ca.pfv.spmf.algorithms.sequenceprediction.ipredict.predictor.Markov.MarkovFirstOrderPredictor;
 import ca.pfv.spmf.algorithms.sequenceprediction.ipredict.predictor.TDAG.TDAGPredictor;
 import ca.pfv.spmf.test.MainTestPPM;
+import com.tinkerpop.blueprints.util.io.gml.GMLTokens;
+import gml.DIGMLReader;
+
+import static com.tinkerpop.blueprints.util.io.gml.GMLReader.DEFAULT_LABEL;
+import static gml.DIGMLReader.DEFAULT_BUFFER_SIZE;
 
 public class Main {
 
     private static List<ExtendedSequence> sequences = new ArrayList<ExtendedSequence>();
-    private static String sampleFileName = "/Users/demidovs/Documents/Projects/dialog-intent-classic/src/main/resources/graph";
-    private static String fileExtension = ".gml";
     private static List<Sequence> testData = new ArrayList<Sequence>();
     private static List<Sequence> learningData = new ArrayList<Sequence>();
-    private static String russianAlphabet = "/Users/demidovs/Documents/Projects/dialog-intent-classic/src/main/resources/russian.txt";
 
     public static void main(String[] args) throws Exception {
 
         final String algorithmTest = "DG";
 
+        String russianAlphabet = "/Users/demidovs/Documents/Projects/dialog-intent-classic/src/main/resources/russian.txt";
         ParseRussian.readAlphabet(russianAlphabet);
 
         for (int i = 0; i < 5; i++) {
             TinkerGraph graph = new TinkerGraph();
+            String sampleFileName = "/Users/demidovs/Documents/Projects/dialog-intent-classic/src/main/resources/graph";
+            String fileExtension = ".gml";
             String filename = sampleFileName + (i + 1) + fileExtension;
-            GMLReader.inputGraph(graph, filename);
+            InputStream is = new FileInputStream(filename);
+            BufferedReader in = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+            FileInputStream fis = new FileInputStream(filename);
+            DIGMLReader.inputGraph(graph, fis, DEFAULT_BUFFER_SIZE, DEFAULT_LABEL, GMLTokens.BLUEPRINTS_ID, GMLTokens.BLUEPRINTS_ID, null);
+            fis.close();
             traverse(graph);
             System.out.println("done traversing with seq size= " + sequences.size());
         }
@@ -131,13 +139,13 @@ public class Main {
 		 * traverse(graph); System.out.println("done traversing");
 		 */
         //
-        // MarkovFirstOrderPredictor predictionModel = new
-        // MarkovFirstOrderPredictor("PPM");
-        // predictionModel.Train(sequences);
-        // Sequence sequence = new Sequence(0);
-        // sequence.addItem(new Item(7));
-        // sequence.addItem(new Item(7));
-        // sequence.addItem(new Item(12));
+//         MarkovFirstOrderPredictor predictionModel = new
+//         MarkovFirstOrderPredictor("PPM");
+//         predictionModel.Train(sequences);
+//         Sequence sequence = new Sequence(0);
+//         sequence.addItem(new Item(7));
+//         sequence.addItem(new Item(7));
+//         sequence.addItem(new Item(12));
         // // Then we perform the prediction
         // Sequence thePrediction = predictionModel.Predict(sequence);
         // System.out.println("For the sequence <(3),(14), (14)>, the prediction
@@ -149,7 +157,7 @@ public class Main {
     private static void traverse(TinkerGraph graph) {
         for (Vertex vertex : graph.getVertices()) {
             String intent = vertex.getProperty("intent");
-             System.out.println("vertex:" + vertex + " intent:" + intent);
+//            System.out.println("vertex:" + vertex + " intent:" + intent);
             ExtendedSequence seq = new ExtendedSequence(0);
             seq.addItem(new Item(0));
             travel(vertex, seq);
@@ -220,16 +228,16 @@ public class Main {
                     Item predicted = thePrediction.get(0);
                     if (predicted.val == (currentItems.get(realSeqRange-1)).val) {
                         hitpoint++;
-                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
-                                + thePrediction);
-                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
+//                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
+//                                + thePrediction);
+//                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
 
                     } else {
-                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
-                                + thePrediction);
-                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
-
-                        System.out.println("on message:" + testSeq.getTextForSeqElement(testSeqRange-1)  + "  reply would be with :" + ParseRussian.getCharValue(predicted.val));
+//                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
+//                                + thePrediction);
+//                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
+//
+//                        System.out.println("on message:" + testSeq.getTextForSeqElement(testSeqRange-1)  + "  reply would be with :" + ParseRussian.getCharValue(predicted.val));
                     }
                 } else {
                     System.out.println("test subsequence is too small, skip it ");
