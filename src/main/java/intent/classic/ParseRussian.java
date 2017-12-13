@@ -1,11 +1,6 @@
 package intent.classic;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,15 +11,24 @@ import java.util.Objects;
 
 class ParseRussian {
 
-    static boolean isSuperTypes = true;
-    static LinkedHashMap<Character, Integer> alphabet = new LinkedHashMap<Character, Integer>();
-    static HashMap<Integer, ArrayList<Character>> superTypes = new HashMap();
+    private LinkedHashMap<Character, Integer> alphabet;
+    private HashMap<Integer, ArrayList<Character>> superTypes;
+    private boolean isSuperTypes;
 
-    public static void readAlphabet(String filename) {
+    ParseRussian(boolean useSuper){
+        alphabet = new LinkedHashMap<>();
+        superTypes = new HashMap<>();
+        isSuperTypes = useSuper;
+    }
+
+    void readAlphabet(String filename) {
         String line;
         InputStream fis;
+
         try {
-            fis = new FileInputStream(filename);
+            ClassLoader classLoader = getClass().getClassLoader();
+            File file = new File(classLoader.getResource(filename).getFile());
+            fis = new FileInputStream(file);
             InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
             BufferedReader br = new BufferedReader(isr);
             int i = 1;
@@ -38,11 +42,11 @@ class ParseRussian {
         }
 
         if (isSuperTypes) {
-            splitToSuperTypes();
+            superTypes = this.splitToSuperTypes();
         }
     }
 
-    private static void splitToSuperTypes() {
+    HashMap<Integer, ArrayList<Character>> splitToSuperTypes() {
         ArrayList<Character> st1 = new ArrayList<Character>();
         st1.add('а');
         st1.add('б');
@@ -78,14 +82,17 @@ class ParseRussian {
         st5.add('ш');
         st5.add('щ');
 
-        superTypes.put(1, st1);
-        superTypes.put(2, st2);
-        superTypes.put(3, st3);
-        superTypes.put(4, st4);
-        superTypes.put(5, st5);
+        HashMap<Integer, ArrayList<Character>> sTypes = new HashMap<>();
+        sTypes.put(1, st1);
+        sTypes.put(2, st2);
+        sTypes.put(3, st3);
+        sTypes.put(4, st4);
+        sTypes.put(5, st5);
+
+        return sTypes;
     }
 
-    public static int getIntValue(char letter) {
+    int getIntValue(char letter) {
         if (!isSuperTypes) {
             return alphabet.get(letter);
         } else {
@@ -99,11 +106,12 @@ class ParseRussian {
         return -1;
     }
 
-    public static char getCharValue(int num) {
+    char getCharValue(int num) {
         return getKeyByValue(alphabet, num);
     }
 
-    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+    <T, E>
+    T getKeyByValue(Map<T, E> map, E value) {
         for (Entry<T, E> entry : map.entrySet()) {
             if (Objects.equals(value, entry.getValue())) {
                 return entry.getKey();

@@ -4,21 +4,23 @@ import java.util.ArrayList;
 
 import ca.pfv.spmf.algorithms.sequenceprediction.ipredict.database.Sequence;
 
-public class ExtendedSequence extends Sequence{
+public class ExtendedSequence extends Sequence {
 
     private ArrayList<String> textMessages;
 
     public ExtendedSequence(int id) {
         super(id);
-        textMessages = new ArrayList();
+
     }
 
-    public void addMessageText(String text){
+    public void addMessageText(String text) {
+        if (textMessages == null) {
+            textMessages = new ArrayList<>();
+        }
         textMessages.add(text);
-
     }
 
-    public String getTextForSeqElement(int id){
+    public String getTextForSeqElement(int id) {
         return textMessages.get(id);
     }
 
