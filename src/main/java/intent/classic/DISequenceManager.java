@@ -21,6 +21,7 @@ class DISequenceManager {
     private List<ExtendedSequence> readFromSingleFile(ParseRussian parser, File file) throws IOException {
         List<ExtendedSequence> seqs = new ArrayList<>();
         TinkerGraph graph = new TinkerGraph();
+        System.out.println("Start traversing file: " + file.toString());
         FileInputStream fis = new FileInputStream(file);
         DIGMLReader.inputGraph(graph, fis, DEFAULT_BUFFER_SIZE, DEFAULT_LABEL, GMLTokens.BLUEPRINTS_ID, GMLTokens.BLUEPRINTS_ID, null);
         fis.close();
@@ -34,7 +35,7 @@ class DISequenceManager {
         Files.walk(Paths.get(inputDirPath))
                 .filter(Files::isRegularFile)
                 .filter(p -> p.toString().endsWith("gml"))
-//                .limit(50)
+//                .limit(10)
                 .forEach((f) -> {
                     try {
                         seqs.addAll(readFromSingleFile(parser, f.toFile()));

@@ -11,7 +11,7 @@ import java.util.Objects;
 
 class ParseRussian {
 
-    private LinkedHashMap<Character, Integer> alphabet;
+    private static LinkedHashMap<Character, Integer> alphabet;
     private HashMap<Integer, ArrayList<Character>> superTypes;
     private boolean isSuperTypes;
 
@@ -106,11 +106,11 @@ class ParseRussian {
         return -1;
     }
 
-    char getCharValue(int num) {
+    static char getCharValue(int num) {
         return getKeyByValue(alphabet, num);
     }
 
-    <T, E>
+    static <T, E>
     T getKeyByValue(Map<T, E> map, E value) {
         for (Entry<T, E> entry : map.entrySet()) {
             if (Objects.equals(value, entry.getValue())) {

@@ -143,13 +143,8 @@ public class Main {
         int skipped = 0;
         for (Sequence seq : dataset.getTestData()) {
             if (seq.size() > 1) {
-                // int seqRange = new Random().nextInt(seq.size() - 1) + 1;
                 int realSeqRange = new Random().nextInt(seq.size() - 1) + 2;
-                // System.out.println("rand :" + seqRange + " size:" +
-                // seq.size());
                 ArrayList<Item> currentItems = (ArrayList<Item>) seq.getItems();
-                //int realSeqRange = seq.size();
-                //int testSeqRange = seq.size() - 2;
                 int testSeqRange = realSeqRange - 1;
 
                 if (testSeqRange > 0) {
@@ -158,24 +153,22 @@ public class Main {
 
                     for (int i = 0; i < testSeqRange; i++) {
                         testSeq.addItem(currentItems.get(i));
-//                        testSeq.addMessageText(((ExtendedSequence) seq).getTextForSeqElement(i));
                         // added n-1 items to the new sequence
                         // now need to test it
                     }
+
                     Sequence thePrediction = predictionModel.Predict(testSeq);
                     Item predicted = thePrediction.get(0);
                     if (predicted.val == (currentItems.get(realSeqRange - 1)).val) {
                         hitpoint++;
-//                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
-//                                + thePrediction);
-//                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
+                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
+                                + thePrediction);
+                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
 
                     } else {
-//                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
-//                                + thePrediction);
-//                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
-//
-//                        System.out.println("on message:" + testSeq.getTextForSeqElement(testSeqRange-1)  + "  reply would be with :" + ParseRussian.getCharValue(predicted.val));
+                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
+                                + thePrediction);
+                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
                     }
                 } else {
                     System.out.println("test subsequence is too small, skip it ");
@@ -183,8 +176,10 @@ public class Main {
                 }
             }
         }
+
         double hitratio = (double) hitpoint / overall;
-        System.out.println("tested data, hited: " + hitpoint + " out of :" + overall + "with skipped:" + skipped);
+
+        System.out.println("tested data, hit: " + hitpoint + " out of: " + overall + " with skipped: " + skipped);
         System.out.println("hit ratio:" + hitratio);
         System.out.println("test data size:" + dataset.getTestData().size());
     }
