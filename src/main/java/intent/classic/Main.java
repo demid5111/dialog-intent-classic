@@ -85,9 +85,9 @@ public class Main {
 
         // PPMAlgr();
 
-		/*
-		 * traverse(graph); System.out.println("done traversing");
-		 */
+        /*
+         * traverse(graph); System.out.println("done traversing");
+         */
         //
 //         MarkovFirstOrderPredictor predictionModel = new
 //         MarkovFirstOrderPredictor("PPM");
@@ -103,7 +103,6 @@ public class Main {
         // System.out.println("vertex " + a.getId() + " has name " +
         // a.getProperty("name"));
     }
-
 
 
     static void testAlgorithm(Predictor predictionModel, DIDataset dataset) {
@@ -163,12 +162,12 @@ public class Main {
                         hitpoint++;
                         System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
                                 + thePrediction);
-                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
+                        System.out.println("while last symbol:" + currentItems.get(realSeqRange - 1).val);
 
                     } else {
                         System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
                                 + thePrediction);
-                        System.out.println("while last symbol:" + currentItems.get(realSeqRange-1).val);
+                        System.out.println("while last symbol:" + currentItems.get(realSeqRange - 1).val);
                     }
                 } else {
                     System.out.println("test subsequence is too small, skip it ");
@@ -197,35 +196,34 @@ public class Main {
 
 
 
-	/*
-	 * static void PPMAlgr() throws IOException{ // Load the set of training
-	 * sequences String inputPath = fileToPath("BIBLE.txt"); SequenceDatabase
-	 * trainingSet = new SequenceDatabase();
-	 * trainingSet.loadFileSPMFFormat(inputPath, Integer.MAX_VALUE, 0,
-	 * Integer.MAX_VALUE);
-	 *
-	 * // Print the training sequences to the console
-	 * System.out.println("--- Training sequences ---"); for(Sequence sequence :
-	 * trainingSet.getSequences()) { System.out.println(sequence.toString()); }
-	 * System.out.println();
-	 *
-	 * // Print statistics about the training sequences
-	 * SequenceStatsGenerator.prinStats(trainingSet, " training sequences ");
-	 *
-	 * // Train the prediction model MarkovFirstOrderPredictor predictionModel =
-	 * new MarkovFirstOrderPredictor("PPM");
-	 * predictionModel.Train(trainingSet.getSequences());
-	 *
-	 * // Now we will make a prediction. // We want to predict what would occur
-	 * after the sequence <1, 3>. // We first create the sequence Sequence
-	 * sequence = new Sequence(0); sequence.addItem(new Item(160));
-	 * sequence.addItem(new Item(662)); sequence.addItem(new Item(663)); // Then
-	 * we perform the prediction Sequence thePrediction =
-	 * predictionModel.Predict(sequence); System.out.
-	 * println("For the sequence <(1),(4)>, the prediction for the next symbol is: +"
-	 * + thePrediction); }
-	 */
-
+    /*
+     * static void PPMAlgr() throws IOException{ // Load the set of training
+     * sequences String inputPath = fileToPath("BIBLE.txt"); SequenceDatabase
+     * trainingSet = new SequenceDatabase();
+     * trainingSet.loadFileSPMFFormat(inputPath, Integer.MAX_VALUE, 0,
+     * Integer.MAX_VALUE);
+     *
+     * // Print the training sequences to the console
+     * System.out.println("--- Training sequences ---"); for(Sequence sequence :
+     * trainingSet.getSequences()) { System.out.println(sequence.toString()); }
+     * System.out.println();
+     *
+     * // Print statistics about the training sequences
+     * SequenceStatsGenerator.prinStats(trainingSet, " training sequences ");
+     *
+     * // Train the prediction model MarkovFirstOrderPredictor predictionModel =
+     * new MarkovFirstOrderPredictor("PPM");
+     * predictionModel.Train(trainingSet.getSequences());
+     *
+     * // Now we will make a prediction. // We want to predict what would occur
+     * after the sequence <1, 3>. // We first create the sequence Sequence
+     * sequence = new Sequence(0); sequence.addItem(new Item(160));
+     * sequence.addItem(new Item(662)); sequence.addItem(new Item(663)); // Then
+     * we perform the prediction Sequence thePrediction =
+     * predictionModel.Predict(sequence); System.out.
+     * println("For the sequence <(1),(4)>, the prediction for the next symbol is: +"
+     * + thePrediction); }
+     */
 
 
     public static String fileToPath(String filename) throws UnsupportedEncodingException {

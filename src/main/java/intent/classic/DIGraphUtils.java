@@ -18,13 +18,13 @@ class DIGraphUtils {
 
         Vertex root = DIGraphUtils.findRoot(graph);
 
-        List<Vertex> leafVertices = DIGraphUtils.keepLeafVertices(graph);
         List<Vertex> duplicateVertices = DIGraphUtils.findDuplicateVertices(graph);
         duplicateVertices.forEach(graph::removeVertex);
 
         List<Vertex> noIntentVertices = DIGraphUtils.findNoIntentVertices(graph, parser);
         noIntentVertices.forEach(graph::removeVertex);
 
+        List<Vertex> leafVertices = DIGraphUtils.findLeafVertices(graph);
         final Integer[] ids = {0};
         leafVertices
                 .forEach((Vertex leaf) -> {
@@ -38,7 +38,7 @@ class DIGraphUtils {
         return currTreeSeqs;
     }
 
-    private static List<Vertex> keepLeafVertices(TinkerGraph graph) {
+    private static List<Vertex> findLeafVertices(TinkerGraph graph) {
         return StreamSupport
                 .stream(graph.getVertices().spliterator(), false)
                 .filter((v) -> {
@@ -78,7 +78,7 @@ class DIGraphUtils {
 
         for (Object path : pipe) {
             ExtendedSequence newSeq = DIGraphUtils.seqFromVertexPath(path, startId, parser);
-            if (newSeq.size() <= 2){
+            if (newSeq.size() <= 2) {
                 continue;
             }
             res.add(newSeq);
@@ -87,10 +87,10 @@ class DIGraphUtils {
         return res;
     }
 
-    private static ExtendedSequence seqFromVertexPath(Object path, int id, ParseRussian parser){
+    private static ExtendedSequence seqFromVertexPath(Object path, int id, ParseRussian parser) {
         ExtendedSequence resSeq = new ExtendedSequence(id);
 
-        ((ArrayList<Vertex>)path)
+        ((ArrayList<Vertex>) path)
                 .stream()
                 .skip(1)
                 .map(v -> DIGraphUtils.getIntentCode(v, parser))
@@ -104,7 +104,7 @@ class DIGraphUtils {
     private static List<Vertex> findDuplicateVertices(TinkerGraph graph) {
         return StreamSupport
                 .stream(graph.getVertices().spliterator(), false)
-                .filter(v -> ((String)v.getId()).matches("\\d*00\\d"))
+                .filter(v -> ((String) v.getId()).matches("\\d*00\\d"))
                 .collect(Collectors.toList());
     }
 
@@ -148,7 +148,7 @@ class DIGraphUtils {
     private static int getIntentCode(Vertex vertex, ParseRussian parser) {
         String intentStr = vertex.getProperty("intent");
 
-        if (intentStr == null || intentStr.length() == 0){
+        if (intentStr == null || intentStr.length() == 0) {
             return -1;
         }
 
