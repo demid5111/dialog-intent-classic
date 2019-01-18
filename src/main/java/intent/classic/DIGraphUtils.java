@@ -20,9 +20,9 @@ class DIGraphUtils {
 
         List<Vertex> leafVertices = DIGraphUtils.keepLeafVertices(graph);
         List<Vertex> duplicateVertices = DIGraphUtils.findDuplicateVertices(graph);
-        List<Vertex> noIntentVertices = DIGraphUtils.findNoIntentVertices(graph, parser);
-
         duplicateVertices.forEach(graph::removeVertex);
+
+        List<Vertex> noIntentVertices = DIGraphUtils.findNoIntentVertices(graph, parser);
         noIntentVertices.forEach(graph::removeVertex);
 
         final Integer[] ids = {0};
@@ -148,7 +148,7 @@ class DIGraphUtils {
     private static int getIntentCode(Vertex vertex, ParseRussian parser) {
         String intentStr = vertex.getProperty("intent");
 
-        if (intentStr.length() == 0){
+        if (intentStr == null || intentStr.length() == 0){
             return -1;
         }
 
