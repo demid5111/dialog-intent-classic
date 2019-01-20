@@ -80,17 +80,13 @@ class DIGraphUtils {
 
         List<ExtendedSequence> res = new ArrayList<>();
 
-        try {
-            for (Object path : pipe) {
-                ExtendedSequence newSeq = DIGraphUtils.seqFromVertexPath(path, startId, parser);
-                if (newSeq.size() <= 2) {
-                    continue;
-                }
-                res.add(newSeq);
-                startId += 1;
+        for (Object path : pipe) {
+            ExtendedSequence newSeq = DIGraphUtils.seqFromVertexPath(path, startId, parser);
+            if (newSeq.size() <= 2) {
+                continue;
             }
-        } catch (NullPointerException e) {
-            System.out.println("Wrong pipe");
+            res.add(newSeq);
+            startId += 1;
         }
         return res;
     }

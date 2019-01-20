@@ -66,7 +66,6 @@ public class Main {
             System.out.println("Inference started: " + algorithmName);
             double total = 0.;
             for (int i = 0; i < numberRuns; i++) {
-                System.out.println("Iteration " + (i+1) + "/" + numberRuns);
                 total += testData(predictionModel, dataset);
             }
 
@@ -94,12 +93,12 @@ public class Main {
                     predictionModel = new MarkovFirstOrderPredictor("PPM");
                     break;
                 case "CPTPlus":
-                    optionalParameters = "CCF:true CBS:true CCFmin:1 CCFmax:3 CCFsup:2 splitMethod:0 minPredictionRatio:0.5 noiseRatio:1.0";
+                    optionalParameters = "CCF:true CBS:true CCFmin:1 CCFmax:6 CCFsup:2 splitMethod:0 splitLength:4 minPredictionRatio:1.0 noiseRatio:1.0";
                     predictionModel = new CPTPlusPredictor("CPT+", optionalParameters);
                     break;
 
                 case "CPT":
-                    optionalParameters = "splitLength:6 recursiveDividerMin:1 recursiveDividerMax:5";
+                    optionalParameters = "splitLength:6 splitMethod:0 recursiveDividerMin:1 recursiveDividerMax:5";
                     predictionModel = new CPTPredictor("CPT", optionalParameters);
                     break;
 
@@ -135,39 +134,13 @@ public class Main {
         return models;
     }
 
-    static void testAlgorithm(Predictor predictionModel, DIDataset dataset) {
-        int rand = new Random().nextInt(dataset.getTestData().size());
-        ExtendedSequence testSeq = (ExtendedSequence) dataset.getTestData().get(rand);
-        ArrayList<Item> testItems = (ArrayList<Item>) testSeq.getItems();
-        double precision;
-        int hit = 0;
-        int overall = 0;
-        Sequence thePrediction = predictionModel.Predict(testSeq);
-        System.out.println(
-                "For the sequence " + dataset.getTestData().get(rand) + " the prediction for the next symbol is: " + thePrediction);
-
-        for (Sequence seq : dataset.getTestData()) {
-
-            if (findSubsequence(seq.getItems(), testSeq.getItems())) {
-                overall++;
-                for (Item it : thePrediction.getItems()) {
-                    testSeq.addItem(it);
-                }
-                if (findSubsequence(seq.getItems(), testSeq.getItems())) {
-                    hit++;
-                }
-            }
-        }
-        System.out.println("found subsequences:" + overall + " and hited: " + hit);
-
-    }
-
     private static double testData(Predictor predictionModel, DIDataset dataset) {
         // for all test data
         // need to get seq from 1 to n-1, save real n symbol, predict and get
         // hit
         int hitpoint = 0;
         int skipped = 0;
+        int noSingleWinner = 0;
         for (Sequence seq : dataset.getTestData()) {
             if (seq.size() <= 1) {
                 System.out.println("Too small sequence. Skipping");
@@ -185,77 +158,53 @@ public class Main {
 
             // now need to test it
             Sequence thePrediction = predictionModel.Predict(testSeq);
-            Item predicted = thePrediction.get(0);
 
             Integer expectedLastElementValue = currentItems.get(lastIndex).val;
-            Integer predictedLastElementValue = predicted.val;
+            Integer predictedLastElementValue;
+
+            if (thePrediction.getItems().size() == 0){
+                System.out.println("No particular winner. Select it ourselves. Works only for CPTPlus");
+
+                Map<Integer, Float> countTable;
+                try {
+                    countTable = ((CPTPlusPredictor) predictionModel).getCountTable();
+                } catch (Exception e){
+                    noSingleWinner += 1;
+                    continue;
+                }
+
+                for (Map.Entry<Integer, Float> integerFloatEntry : countTable.entrySet()) {
+                    System.out.println("symbol" + ((Map.Entry) integerFloatEntry).getKey() +
+                            "\t score: " + ((Map.Entry) integerFloatEntry).getValue());
+                }
+
+                List<Integer> symbolKeys = new ArrayList<>(countTable.keySet());
+                symbolKeys.sort((keyOne, keyTwo) -> {
+                    float valueOne = countTable.get(keyOne);
+                    float valueTwo = countTable.get(keyTwo);
+                    return Float.compare(valueOne, valueTwo);
+                });
+
+                predictedLastElementValue = symbolKeys.get(symbolKeys.size() - 1);
+            } else {
+                Item predicted = thePrediction.get(0);
+                predictedLastElementValue = predicted.val;
+            }
 
             if (predictedLastElementValue.equals(expectedLastElementValue)) {
                 hitpoint++;
-            } else {
-                System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
-                        + predictedLastElementValue);
-                System.out.println("while last symbol:" + expectedLastElementValue);
             }
+//            else {
+//                System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
+//                        + predictedLastElementValue);
+//                System.out.println("while last symbol:" + expectedLastElementValue);
+//            }
         }
 
-        final int overall = dataset.getTestData().size() - skipped;
+        final int overall = dataset.getTestData().size() - skipped - noSingleWinner;
 
-        final double accuracy = (double) hitpoint / overall;
+        System.out.println("Overall number of no Winner: " + noSingleWinner);
 
-        System.out.println("tested data, hit: " + hitpoint + " out of: " + overall + " with skipped: " + skipped);
-        System.out.println("accuracy:" + accuracy);
-        System.out.println("test data size:" + dataset.getTestData().size());
-
-        return accuracy;
+        return  (double) hitpoint / overall;
     }
-
-    private static boolean findSubsequence(List<Item> input, List<Item> seq) {
-        for (Item item : input) {
-            for (Item it2 : seq) {
-                if (!item.equals(it2)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-
-
-    /*
-     * static void PPMAlgr() throws IOException{ // Load the set of training
-     * sequences String inputPath = fileToPath("BIBLE.txt"); SequenceDatabase
-     * trainingSet = new SequenceDatabase();
-     * trainingSet.loadFileSPMFFormat(inputPath, Integer.MAX_VALUE, 0,
-     * Integer.MAX_VALUE);
-     *
-     * // Print the training sequences to the console
-     * System.out.println("--- Training sequences ---"); for(Sequence sequence :
-     * trainingSet.getSequences()) { System.out.println(sequence.toString()); }
-     * System.out.println();
-     *
-     * // Print statistics about the training sequences
-     * SequenceStatsGenerator.prinStats(trainingSet, " training sequences ");
-     *
-     * // Train the prediction model MarkovFirstOrderPredictor predictionModel =
-     * new MarkovFirstOrderPredictor("PPM");
-     * predictionModel.Train(trainingSet.getSequences());
-     *
-     * // Now we will make a prediction. // We want to predict what would occur
-     * after the sequence <1, 3>. // We first create the sequence Sequence
-     * sequence = new Sequence(0); sequence.addItem(new Item(160));
-     * sequence.addItem(new Item(662)); sequence.addItem(new Item(663)); // Then
-     * we perform the prediction Sequence thePrediction =
-     * predictionModel.Predict(sequence); System.out.
-     * println("For the sequence <(1),(4)>, the prediction for the next symbol is: +"
-     * + thePrediction); }
-     */
-
-
-    public static String fileToPath(String filename) throws UnsupportedEncodingException {
-        URL url = MainTestPPM.class.getResource(filename);
-        return java.net.URLDecoder.decode(url.getPath(), "UTF-8");
-    }
-
 }
