@@ -3,12 +3,10 @@ package intent.classic;
 import ca.pfv.spmf.algorithms.sequenceprediction.ipredict.database.Sequence;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import com.tinkerpop.blueprints.util.io.gml.GMLTokens;
+import com.tinkerpop.blueprints.util.io.gml.GMLWriter;
 import gml.DIGMLReader;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -19,13 +17,12 @@ import static gml.DIGMLReader.DEFAULT_BUFFER_SIZE;
 
 class DISequenceManager {
     private List<ExtendedSequence> readFromSingleFile(ParseRussian parser, File file) throws IOException {
-        List<ExtendedSequence> seqs = new ArrayList<>();
         TinkerGraph graph = new TinkerGraph();
         System.out.println("Start traversing file: " + file.toString());
         FileInputStream fis = new FileInputStream(file);
         DIGMLReader.inputGraph(graph, fis, DEFAULT_BUFFER_SIZE, DEFAULT_LABEL, GMLTokens.BLUEPRINTS_ID, GMLTokens.BLUEPRINTS_ID, null);
         fis.close();
-        seqs.addAll(DIGraphUtils.traverse(graph, parser));
+        List<ExtendedSequence> seqs = new ArrayList<>(DIGraphUtils.traverse(graph, parser));
         System.out.println("Done traversing file: " + file.toString() + " with seq size: " + seqs.size());
         return seqs;
     }
@@ -35,7 +32,7 @@ class DISequenceManager {
         Files.walk(Paths.get(inputDirPath))
                 .filter(Files::isRegularFile)
                 .filter(p -> p.toString().endsWith("gml"))
-//                .limit(10)
+//                .limit(1)
                 .forEach((f) -> {
                     try {
                         seqs.addAll(readFromSingleFile(parser, f.toFile()));

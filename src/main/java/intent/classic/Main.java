@@ -29,6 +29,14 @@ public class Main {
         String outputDirPath = cmd.getOptionValue("output-dir");
         String algosNames = cmd.getOptionValue("algorithms");
         String isGeneralUsed = cmd.getOptionValue("generalize-types");
+        int numberRuns = Integer.valueOf(cmd.getOptionValue("number-runs"));
+
+        HashMap<String, HashMap<String, Object>> models = initializeModels(algosNames);
+
+        if (models == null) {
+            System.out.println("Unable to initialize models");
+            return;
+        }
 
         ParseRussian alphabetParser = new ParseRussian(isGeneralUsed.equals("True"));
         alphabetParser.readAlphabet("russian.txt");
@@ -40,70 +48,92 @@ public class Main {
         DIDataset dataset = new DIDataset(sequences);
         dataset.splitDataset(0.8);
 
-        final String algorithmTest = "DG";
-        Predictor predictionModel;
-        String optionalParameters;
-        switch (algorithmTest) {
-            case "PPM":
-                predictionModel = new MarkovFirstOrderPredictor("PPM");
-                break;
-            case "CPTPlus":
-                optionalParameters = "CCF:true CBS:true CCFmin:1 CCFmax:3 CCFsup:2 splitMethod:0 minPredictionRatio:0.5 noiseRatio:1.0";
-                predictionModel = new CPTPlusPredictor("CPT+", optionalParameters);
-                break;
+        collectPerformanceData(models, dataset, numberRuns);
 
-            case "CPT":
-                optionalParameters = "splitLength:6 recursiveDividerMin:1 recursiveDividerMax:5";
-                predictionModel = new CPTPredictor("CPT", optionalParameters);
-                break;
-
-            case "DG":
-                optionalParameters = "lookahead:2";
-                predictionModel = new DGPredictor("DG", optionalParameters);
-                break;
-
-            case "AKOM":
-                optionalParameters = "order:4";
-                predictionModel = new MarkovAllKPredictor("AKOM", optionalParameters);
-                break;
-            case "TDAG":
-                predictionModel = new TDAGPredictor("TDAG");
-                break;
-
-            case "LZ78":
-                predictionModel = new LZ78Predictor("LZ78");
-                break;
-
-            default:
-                System.out.println("Wrong argument...");
-                return;
-        }
-        System.out.println("Using " + algorithmTest + " to predict");
-        predictionModel.Train(dataset.getLearningData());
-        System.out.println("done training");
-        testData(predictionModel, dataset);
-
-        // PPMAlgr();
-
-        /*
-         * traverse(graph); System.out.println("done traversing");
-         */
-        //
-//         MarkovFirstOrderPredictor predictionModel = new
-//         MarkovFirstOrderPredictor("PPM");
-//         predictionModel.Train(sequences);
-//         Sequence sequence = new Sequence(0);
-//         sequence.addItem(new Item(7));
-//         sequence.addItem(new Item(7));
-//         sequence.addItem(new Item(12));
-        // // Then we perform the prediction
-        // Sequence thePrediction = predictionModel.Predict(sequence);
-        // System.out.println("For the sequence <(3),(14), (14)>, the prediction
-        // for the next symbol is: +" + thePrediction);
-        // System.out.println("vertex " + a.getId() + " has name " +
-        // a.getProperty("name"));
+        printReport(models);
     }
 
+    private static void collectPerformanceData(HashMap<String, HashMap<String, Object>> models,
+                                               DIDataset dataset,
+                                               int numberRuns) {
+        for (Map.Entry<String, HashMap<String, Object>> pair : models.entrySet()) {
+            final String algorithmName = pair.getKey();
+            final Predictor predictionModel = (Predictor) pair.getValue().get("model");
+            System.out.println("Training: " + algorithmName);
+            predictionModel.Train(dataset.getLearningData());
+            System.out.println("Done training");
+
+            System.out.println("Inference started: " + algorithmName);
+            double total = 0.;
+            for (int i = 0; i < numberRuns; i++) {
+                System.out.println("Iteration " + (i+1) + "/" + numberRuns);
+                total += testData(predictionModel, dataset);
+            }
+
+            double averageAccuracy = total / numberRuns;
+            System.out.println("Done inference: " + algorithmName + " Accuracy: " + averageAccuracy);
+            models.get(algorithmName).put("accuracy", averageAccuracy);
+        }
+    }
+
+    private static void printReport(HashMap<String, HashMap<String, Object>> models){
+        for (Map.Entry<String, HashMap<String, Object>> pair : models.entrySet()) {
+            System.out.println("Model: " + pair.getKey());
+            System.out.println("\tParameters: " + pair.getValue().get("parameters"));
+            System.out.println("\tAccuracy: " + pair.getValue().get("accuracy"));
+        }
+    }
+
+    private static HashMap<String, HashMap<String, Object>> initializeModels(String algosNames) {
+        HashMap<String, HashMap<String, Object>> models = new HashMap<>();
+        for (String algorithmTest : algosNames.split(",")) {
+            Predictor predictionModel;
+            String optionalParameters = "";
+            switch (algorithmTest) {
+                case "PPM":
+                    predictionModel = new MarkovFirstOrderPredictor("PPM");
+                    break;
+                case "CPTPlus":
+                    optionalParameters = "CCF:true CBS:true CCFmin:1 CCFmax:3 CCFsup:2 splitMethod:0 minPredictionRatio:0.5 noiseRatio:1.0";
+                    predictionModel = new CPTPlusPredictor("CPT+", optionalParameters);
+                    break;
+
+                case "CPT":
+                    optionalParameters = "splitLength:6 recursiveDividerMin:1 recursiveDividerMax:5";
+                    predictionModel = new CPTPredictor("CPT", optionalParameters);
+                    break;
+
+                case "DG":
+                    optionalParameters = "lookahead:2";
+                    predictionModel = new DGPredictor("DG", optionalParameters);
+                    break;
+
+                case "AKOM":
+                    optionalParameters = "order:4";
+                    predictionModel = new MarkovAllKPredictor("AKOM", optionalParameters);
+                    break;
+                case "TDAG":
+                    predictionModel = new TDAGPredictor("TDAG");
+                    break;
+
+                case "LZ78":
+                    predictionModel = new LZ78Predictor("LZ78");
+                    break;
+
+                default:
+                    System.out.println("Wrong argument...");
+                    return null;
+            }
+
+            HashMap<String, Object> info = new HashMap<>();
+            info.put("model", predictionModel);
+            info.put("accuracy", 0.);
+            info.put("parameters", optionalParameters);
+
+            models.put(algorithmTest, info);
+        }
+        return models;
+    }
 
     static void testAlgorithm(Predictor predictionModel, DIDataset dataset) {
         int rand = new Random().nextInt(dataset.getTestData().size());
@@ -132,55 +162,52 @@ public class Main {
 
     }
 
-    private static void testData(Predictor predictionModel, DIDataset dataset) {
+    private static double testData(Predictor predictionModel, DIDataset dataset) {
         // for all test data
         // need to get seq from 1 to n-1, save real n symbol, predict and get
         // hit
         int hitpoint = 0;
-        int onesized = 0;
-        int overall = 0;
         int skipped = 0;
         for (Sequence seq : dataset.getTestData()) {
-            if (seq.size() > 1) {
-                int realSeqRange = new Random().nextInt(seq.size() - 1) + 2;
-                ArrayList<Item> currentItems = (ArrayList<Item>) seq.getItems();
-                int testSeqRange = realSeqRange - 1;
+            if (seq.size() <= 1) {
+                System.out.println("Too small sequence. Skipping");
+                skipped++;
+            }
 
-                if (testSeqRange > 0) {
-                    overall++;
-                    ExtendedSequence testSeq = new ExtendedSequence(0);
+            int lastIndex = seq.size() - 1;
+            ArrayList<Item> currentItems = (ArrayList<Item>) seq.getItems();
 
-                    for (int i = 0; i < testSeqRange; i++) {
-                        testSeq.addItem(currentItems.get(i));
-                        // added n-1 items to the new sequence
-                        // now need to test it
-                    }
+            ExtendedSequence testSeq = new ExtendedSequence(0);
+            seq.getItems()
+                    .stream()
+                    .limit(lastIndex) // added n-1 items to the new sequence
+                    .forEach(testSeq::addItem);
 
-                    Sequence thePrediction = predictionModel.Predict(testSeq);
-                    Item predicted = thePrediction.get(0);
-                    if (predicted.val == (currentItems.get(realSeqRange - 1)).val) {
-                        hitpoint++;
-                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
-                                + thePrediction);
-                        System.out.println("while last symbol:" + currentItems.get(realSeqRange - 1).val);
+            // now need to test it
+            Sequence thePrediction = predictionModel.Predict(testSeq);
+            Item predicted = thePrediction.get(0);
 
-                    } else {
-                        System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
-                                + thePrediction);
-                        System.out.println("while last symbol:" + currentItems.get(realSeqRange - 1).val);
-                    }
-                } else {
-                    System.out.println("test subsequence is too small, skip it ");
-                    skipped++;
-                }
+            Integer expectedLastElementValue = currentItems.get(lastIndex).val;
+            Integer predictedLastElementValue = predicted.val;
+
+            if (predictedLastElementValue.equals(expectedLastElementValue)) {
+                hitpoint++;
+            } else {
+                System.out.println("For the sequence " + testSeq + " the prediction for the last symbol is: "
+                        + predictedLastElementValue);
+                System.out.println("while last symbol:" + expectedLastElementValue);
             }
         }
 
-        double hitratio = (double) hitpoint / overall;
+        final int overall = dataset.getTestData().size() - skipped;
+
+        final double accuracy = (double) hitpoint / overall;
 
         System.out.println("tested data, hit: " + hitpoint + " out of: " + overall + " with skipped: " + skipped);
-        System.out.println("hit ratio:" + hitratio);
+        System.out.println("accuracy:" + accuracy);
         System.out.println("test data size:" + dataset.getTestData().size());
+
+        return accuracy;
     }
 
     private static boolean findSubsequence(List<Item> input, List<Item> seq) {

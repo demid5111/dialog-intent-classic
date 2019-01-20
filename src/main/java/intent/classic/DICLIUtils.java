@@ -22,6 +22,10 @@ class DICLIUtils {
         algos.setRequired(true);
         options.addOption(algos);
 
+        Option runs = new Option("n", "number-runs", true, "number of runs");
+        runs.setRequired(true);
+        options.addOption(runs);
+
         return options;
     }
 

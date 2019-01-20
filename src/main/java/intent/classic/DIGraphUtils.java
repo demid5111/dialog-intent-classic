@@ -17,6 +17,10 @@ class DIGraphUtils {
         List<ExtendedSequence> currTreeSeqs = new ArrayList<>();
 
         Vertex root = DIGraphUtils.findRoot(graph);
+        if (root == null) {
+            System.out.println("Unable to find a root");
+            return currTreeSeqs;
+        }
 
         List<Vertex> duplicateVertices = DIGraphUtils.findDuplicateVertices(graph);
         duplicateVertices.forEach(graph::removeVertex);
@@ -76,13 +80,17 @@ class DIGraphUtils {
 
         List<ExtendedSequence> res = new ArrayList<>();
 
-        for (Object path : pipe) {
-            ExtendedSequence newSeq = DIGraphUtils.seqFromVertexPath(path, startId, parser);
-            if (newSeq.size() <= 2) {
-                continue;
+        try {
+            for (Object path : pipe) {
+                ExtendedSequence newSeq = DIGraphUtils.seqFromVertexPath(path, startId, parser);
+                if (newSeq.size() <= 2) {
+                    continue;
+                }
+                res.add(newSeq);
+                startId += 1;
             }
-            res.add(newSeq);
-            startId += 1;
+        } catch (NullPointerException e) {
+            System.out.println("Wrong pipe");
         }
         return res;
     }
@@ -124,6 +132,10 @@ class DIGraphUtils {
     }
 
     private static Vertex findRoot(TinkerGraph graph) {
+        // it is not the true Vertex from BlueBrints
+        // instead it is the TinkerVertex instance that has inEdges information
+        // however the whole class is not exported (public) in the library
+        // therefore we need to access this field with the Java Reflection mechanism
         return StreamSupport
                 .stream(graph.getVertices().spliterator(), false)
                 .filter((v) -> {
@@ -132,8 +144,13 @@ class DIGraphUtils {
                     // however the whole class is not exported (public) in the library
                     // therefore we need to access this field with the Java Reflection mechanism
                     try {
-                        Object value = reflectionSetAccessible(v.getClass(), "inEdges").get(v);
-                        return (((HashMap) value).get("undefined")) == null;
+                        Object inEdges = reflectionSetAccessible(v.getClass(), "inEdges").get(v);
+                        Object outEdges = reflectionSetAccessible(v.getClass(), "outEdges").get(v);
+                        Object inEdgesValue = (((HashMap) inEdges).get("undefined"));
+                        Object outEdgesValue = (((HashMap) outEdges).get("undefined"));
+                        return inEdgesValue == null &&
+                                outEdgesValue != null &&
+                                ((HashSet) outEdgesValue).size() > 0;
                     } catch (NoSuchFieldException e) {
                         e.printStackTrace();
                     } catch (IllegalAccessException e) {
@@ -141,7 +158,23 @@ class DIGraphUtils {
                     }
                     return false;
                 })
-                .findFirst()
+                .max((Vertex a, Vertex b) -> {
+                    Object firstOutEdges = null;
+                    Object secondOutEdges = null;
+                    try {
+                        firstOutEdges = reflectionSetAccessible(a.getClass(), "outEdges").get(a);
+                        secondOutEdges = reflectionSetAccessible(b.getClass(), "outEdges").get(b);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                        return -1;
+                    } catch (NoSuchFieldException e) {
+                        e.printStackTrace();
+                        return -1;
+                    }
+                    int firstSize = ((HashSet) (((HashMap) firstOutEdges).get("undefined"))).size();
+                    int secondSize = ((HashSet) (((HashMap) secondOutEdges).get("undefined"))).size();
+                    return Integer.compare(firstSize, secondSize);
+                })
                 .orElse(null);
     }
 
@@ -153,6 +186,10 @@ class DIGraphUtils {
         }
 
         char intentChar = intentStr.charAt(0);
-        return parser.getIntValue(intentChar);
+        try {
+            return parser.getIntValue(intentChar);
+        } catch (NullPointerException e) {
+            return -1;
+        }
     }
 }
