@@ -203,8 +203,6 @@ public class Main {
 
         final int overall = dataset.getTestData().size() - skipped - noSingleWinner;
 
-        System.out.println("Overall number of no Winner: " + noSingleWinner);
-
         return  (double) hitpoint / overall;
     }
 }
