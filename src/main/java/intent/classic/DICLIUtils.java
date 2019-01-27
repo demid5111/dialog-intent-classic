@@ -26,6 +26,18 @@ class DICLIUtils {
         runs.setRequired(true);
         options.addOption(runs);
 
+        Option maxNumberFiles = new Option("maxN", "max-number-files", true, "number of files");
+        maxNumberFiles.setRequired(true);
+        options.addOption(maxNumberFiles);
+
+        Option minSequenceLength = new Option("minL", "min-seqence-length", true, "min size of sequence");
+        minSequenceLength.setRequired(true);
+        options.addOption(minSequenceLength);
+
+        Option trainingDataRatio = new Option("trainingR", "training-ratio", true, "ratio of training data");
+        trainingDataRatio.setRequired(true);
+        options.addOption(trainingDataRatio);
+
         return options;
     }
 

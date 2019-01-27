@@ -1,8 +1,5 @@
 package intent.classic;
 
-import java.io.*;
-import java.net.URL;
-
 import java.util.*;
 
 import ca.pfv.spmf.algorithms.sequenceprediction.ipredict.database.Item;
@@ -29,6 +26,9 @@ public class Main {
         String outputDirPath = cmd.getOptionValue("output-dir");
         String algosNames = cmd.getOptionValue("algorithms");
         String isGeneralUsed = cmd.getOptionValue("generalize-types");
+        int maxNumberFiles = Integer.valueOf(cmd.getOptionValue("max-number-files"));
+        int minSequenceLength = Integer.valueOf(cmd.getOptionValue("min-seqence-length"));
+        double trainingDataRatio = Double.valueOf(cmd.getOptionValue("training-ratio"));
         int numberRuns = Integer.valueOf(cmd.getOptionValue("number-runs"));
 
         HashMap<String, HashMap<String, Object>> models = initializeModels(algosNames);
@@ -41,13 +41,17 @@ public class Main {
         ParseRussian alphabetParser = new ParseRussian(isGeneralUsed.equals("True"));
         alphabetParser.readAlphabet("russian.txt");
 
-        DISequenceManager sequenceManager = new DISequenceManager();
+        DISequenceManager sequenceManager = new DISequenceManager(maxNumberFiles, minSequenceLength);
         List<ExtendedSequence> sequences = sequenceManager.readSequences(alphabetParser, inputDirPath);
         sequenceManager.dumpSequences(outputDirPath, sequences);
 
+        if (sequences.size() == 0){
+            System.out.println("Unable to find sequences of length: " + minSequenceLength);
+            return;
+        }
         DIDataset dataset = new DIDataset(sequences);
 
-        collectPerformanceData(models, dataset, numberRuns, 0.8);
+        collectPerformanceData(models, dataset, numberRuns, trainingDataRatio);
 
         printReport(models);
     }
@@ -72,7 +76,7 @@ public class Main {
                 System.out.println("Inference started: " + algorithmName);
                 final double currentResult = testData(predictionModel, dataset);
                 total += currentResult;
-                if (currentResult > bestResult){
+                if (currentResult > bestResult) {
                     bestResult = currentResult;
                 }
             }
@@ -87,7 +91,7 @@ public class Main {
         }
     }
 
-    private static void printReport(HashMap<String, HashMap<String, Object>> models){
+    private static void printReport(HashMap<String, HashMap<String, Object>> models) {
         for (Map.Entry<String, HashMap<String, Object>> pair : models.entrySet()) {
             System.out.println("Model: " + pair.getKey());
             System.out.println("\tParameters: " + pair.getValue().get("parameters"));
@@ -105,8 +109,9 @@ public class Main {
                 case "PPM":
                     predictionModel = new MarkovFirstOrderPredictor("PPM");
                     break;
+
                 case "CPTPlus":
-                    optionalParameters = "CCF:true CBS:true CCFmin:1 CCFmax:6 CCFsup:2 splitMethod:0 splitLength:4 minPredictionRatio:1.0 noiseRatio:1.0";
+                    optionalParameters = "CCF:true CBS:false CCFmin:1 CCFmax:6 CCFsup:2 splitMethod:0 splitLength:4 minPredictionRatio:0.5 noiseRatio:1.0";
                     predictionModel = new CPTPlusPredictor("CPT+", optionalParameters);
                     break;
 
@@ -124,6 +129,7 @@ public class Main {
                     optionalParameters = "order:4";
                     predictionModel = new MarkovAllKPredictor("AKOM", optionalParameters);
                     break;
+
                 case "TDAG":
                     predictionModel = new TDAGPredictor("TDAG");
                     break;
@@ -176,13 +182,13 @@ public class Main {
             Integer expectedLastElementValue = currentItems.get(lastIndex).val;
             Integer predictedLastElementValue;
 
-            if (thePrediction.getItems().size() == 0){
+            if (thePrediction.getItems().size() == 0) {
 //                System.out.println("No particular winner. Select it ourselves. Works only for CPTPlus");
 
                 Map<Integer, Float> countTable;
                 try {
                     countTable = ((CPTPlusPredictor) predictionModel).getCountTable();
-                } catch (Exception e){
+                } catch (Exception e) {
                     noSingleWinner += 1;
                     continue;
                 }
@@ -199,7 +205,7 @@ public class Main {
                     return Float.compare(valueOne, valueTwo);
                 });
 
-                predictedLastElementValue = symbolKeys.get(symbolKeys.size() - 1);
+                predictedLastElementValue = symbolKeys.size() == 0 ? -6 : symbolKeys.get(symbolKeys.size() - 1);
             } else {
                 Item predicted = thePrediction.get(0);
                 predictedLastElementValue = predicted.val;
@@ -217,6 +223,6 @@ public class Main {
 
         final int overall = dataset.getTestData().size() - skipped - noSingleWinner;
 
-        return  (double) hitpoint / overall;
+        return overall > 0. ? (double) hitpoint / overall : 0.0;
     }
 }

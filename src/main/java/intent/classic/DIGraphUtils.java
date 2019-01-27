@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 class DIGraphUtils {
-    static List<ExtendedSequence> traverse(TinkerGraph graph, ParseRussian parser) {
+    static List<ExtendedSequence> traverse(TinkerGraph graph, ParseRussian parser, int minSequenceLength) {
         List<ExtendedSequence> currTreeSeqs = new ArrayList<>();
 
         Vertex root = DIGraphUtils.findRoot(graph);
@@ -32,7 +32,8 @@ class DIGraphUtils {
         final Integer[] ids = {0};
         leafVertices
                 .forEach((Vertex leaf) -> {
-                    List<ExtendedSequence> paths = DIGraphUtils.allSimplePaths(root, leaf, ids[0], parser);
+                    List<ExtendedSequence> paths = DIGraphUtils.allSimplePaths(root, leaf, ids[0],
+                            parser, minSequenceLength);
                     if (!paths.isEmpty()) {
                         ids[0] += paths.size();
                         currTreeSeqs.addAll(paths);
@@ -60,7 +61,8 @@ class DIGraphUtils {
                 .collect(Collectors.toList());
     }
 
-    private static List<ExtendedSequence> allSimplePaths(Vertex from, Vertex to, int startId, ParseRussian parser) {
+    private static List<ExtendedSequence> allSimplePaths(Vertex from, Vertex to, int startId,
+                                                         ParseRussian parser, int minSequenceLength) {
         final GremlinPipeline pipe = new GremlinPipeline(from)
                 .as("source")
                 .both()
@@ -82,7 +84,7 @@ class DIGraphUtils {
 
         for (Object path : pipe) {
             ExtendedSequence newSeq = DIGraphUtils.seqFromVertexPath(path, startId, parser);
-            if (newSeq.size() <= 2) {
+            if (newSeq.size() < minSequenceLength) {
                 continue;
             }
             res.add(newSeq);
