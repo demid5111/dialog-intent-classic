@@ -20,7 +20,7 @@ public class DIDataset {
     private List<Sequence> testData;
     private List<Sequence> learningData;
 
-    DIDataset(List<ExtendedSequence> sequences){
+    DIDataset(List<ExtendedSequence> sequences) {
         this.sequences = sequences;
         testData = new ArrayList<>();
         learningData = new ArrayList<>();
@@ -28,12 +28,26 @@ public class DIDataset {
 
     void splitDataset(double range) {
         Random rand = new Random();
-        for (ExtendedSequence seq : this.sequences) {
-            double i = rand.nextDouble();
-            if (i < range) {
-                learningData.add(seq);
+        this.testData = new ArrayList<>();
+        this.learningData = new ArrayList<>();
+        final int totalNumber = this.sequences.size();
+        final int testDataSize = (int) Math.ceil((1 - range) * totalNumber);
+        List<Integer> testIndexes = new ArrayList<>();
+        for (; ; ) {
+            int index = rand.nextInt(totalNumber);
+            if (!testIndexes.contains(index)) {
+                testIndexes.add(index);
+            }
+            if (testIndexes.size() >= testDataSize) {
+                break;
+            }
+        }
+
+        for (int i = 0; i < totalNumber; i++) {
+            if (testIndexes.contains(i)) {
+                this.testData.add(this.sequences.get(i));
             } else {
-                testData.add(seq);
+                this.learningData.add(this.sequences.get(i));
             }
         }
 

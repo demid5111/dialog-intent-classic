@@ -46,27 +46,30 @@ public class Main {
         sequenceManager.dumpSequences(outputDirPath, sequences);
 
         DIDataset dataset = new DIDataset(sequences);
-        dataset.splitDataset(0.8);
 
-        collectPerformanceData(models, dataset, numberRuns);
+        collectPerformanceData(models, dataset, numberRuns, 0.8);
 
         printReport(models);
     }
 
     private static void collectPerformanceData(HashMap<String, HashMap<String, Object>> models,
                                                DIDataset dataset,
-                                               int numberRuns) {
+                                               int numberRuns,
+                                               double trainingDataRatio) {
         for (Map.Entry<String, HashMap<String, Object>> pair : models.entrySet()) {
             final String algorithmName = pair.getKey();
             final Predictor predictionModel = (Predictor) pair.getValue().get("model");
-            System.out.println("Training: " + algorithmName);
-            predictionModel.Train(dataset.getLearningData());
-            System.out.println("Done training");
 
-            System.out.println("Inference started: " + algorithmName);
             double total = 0.;
             double bestResult = 0.;
             for (int i = 0; i < numberRuns; i++) {
+                dataset.splitDataset(trainingDataRatio);
+
+                System.out.println("Training: " + algorithmName);
+                predictionModel.Train(dataset.getLearningData());
+                System.out.println("Done training");
+
+                System.out.println("Inference started: " + algorithmName);
                 final double currentResult = testData(predictionModel, dataset);
                 total += currentResult;
                 if (currentResult > bestResult){
@@ -75,9 +78,12 @@ public class Main {
             }
 
             double averageAccuracy = total / numberRuns;
-            System.out.println("Done inference: " + algorithmName + " Accuracy: " + averageAccuracy);
             models.get(algorithmName).put("accuracy", averageAccuracy);
             models.get(algorithmName).put("max_accuracy", bestResult);
+
+            System.out.println("Done inference: " + algorithmName +
+                    " Accuracy: " + averageAccuracy +
+                    " Max Accuracy: " + bestResult);
         }
     }
 
