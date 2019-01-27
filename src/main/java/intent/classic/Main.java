@@ -65,13 +65,19 @@ public class Main {
 
             System.out.println("Inference started: " + algorithmName);
             double total = 0.;
+            double bestResult = 0.;
             for (int i = 0; i < numberRuns; i++) {
-                total += testData(predictionModel, dataset);
+                final double currentResult = testData(predictionModel, dataset);
+                total += currentResult;
+                if (currentResult > bestResult){
+                    bestResult = currentResult;
+                }
             }
 
             double averageAccuracy = total / numberRuns;
             System.out.println("Done inference: " + algorithmName + " Accuracy: " + averageAccuracy);
             models.get(algorithmName).put("accuracy", averageAccuracy);
+            models.get(algorithmName).put("max_accuracy", bestResult);
         }
     }
 
@@ -80,6 +86,7 @@ public class Main {
             System.out.println("Model: " + pair.getKey());
             System.out.println("\tParameters: " + pair.getValue().get("parameters"));
             System.out.println("\tAccuracy: " + pair.getValue().get("accuracy"));
+            System.out.println("\tMaximum accuracy: " + pair.getValue().get("max_accuracy"));
         }
     }
 
@@ -127,6 +134,7 @@ public class Main {
             HashMap<String, Object> info = new HashMap<>();
             info.put("model", predictionModel);
             info.put("accuracy", 0.);
+            info.put("max_accuracy", 0.);
             info.put("parameters", optionalParameters);
 
             models.put(algorithmTest, info);
@@ -163,7 +171,7 @@ public class Main {
             Integer predictedLastElementValue;
 
             if (thePrediction.getItems().size() == 0){
-                System.out.println("No particular winner. Select it ourselves. Works only for CPTPlus");
+//                System.out.println("No particular winner. Select it ourselves. Works only for CPTPlus");
 
                 Map<Integer, Float> countTable;
                 try {
@@ -173,10 +181,10 @@ public class Main {
                     continue;
                 }
 
-                for (Map.Entry<Integer, Float> integerFloatEntry : countTable.entrySet()) {
-                    System.out.println("symbol" + ((Map.Entry) integerFloatEntry).getKey() +
-                            "\t score: " + ((Map.Entry) integerFloatEntry).getValue());
-                }
+//                for (Map.Entry<Integer, Float> integerFloatEntry : countTable.entrySet()) {
+//                    System.out.println("symbol" + ((Map.Entry) integerFloatEntry).getKey() +
+//                            "\t score: " + ((Map.Entry) integerFloatEntry).getValue());
+//                }
 
                 List<Integer> symbolKeys = new ArrayList<>(countTable.keySet());
                 symbolKeys.sort((keyOne, keyTwo) -> {
